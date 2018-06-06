@@ -60,17 +60,15 @@ fun first_answer f xs =
     |x::xs' => case f x of NONE => first_answer f xs' | SOME y => y
 
 fun all_answers f xs = 
-    let fun all_answers_helper g xs' = 
-        case xs' of
-        [] => []
-        |x::es' => case g x of NONE => all_answers_helper g es' 
-        | SOME y => y @ all_answers_helper g es'
+    let fun all_answers_helper (g,ls,acc) = 
+        case ls of
+        [] => SOME acc
+        |x::ex => 
+            case g(x) of 
+            NONE => NONE
+            | SOME y =>  all_answers_helper(g,ex,y@acc)
     in
-        let val answers = all_answers_helper f xs
-        in
-            if null answers then NONE
-            else SOME answers
-        end
+        all_answers_helper (f, xs, [])
     end
 
 val count_wildcards = g (fn w => 1) (fn v => 0)
@@ -92,14 +90,15 @@ fun check_pat p =
         | _                 => []
         end 
     in
-        let val lst = t (fn w =>["Wildcard"]) (fn x => [x]) p
+        let val lst = t (fn w =>[]) (fn x => [x]) p
         in
             let fun isRepeat(ls) = 
                 case ls of
-                [] => false
-                |x::xs => if List.exists (fn s => s = x ) ls then true else isRepeat(xs)
+                [] => true
+                |x::xs => if List.exists (fn s => s = x ) xs then false else isRepeat(xs)
             in
-                isRepeat(lst)
+                if List.length lst = 1 then true
+                else isRepeat(lst)
             end
         end
     end
